@@ -25,8 +25,8 @@
     function qp(n) { var m = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; }
     var v = qp('v').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 11);
     var start = parseInt(qp('start'), 10) || 0;
-    var mute = qp('mute') === '1' ? 1 : 0;   // الكتم يقرّره يونتي عبر الرابط
-    var player, ready = false;
+    var wantSound = qp('mute') !== '1';   // Unity decides: mute=0 => want sound, mute=1 => stay muted
+    var player, ready = false, done = false;
     var tap = document.getElementById('tap');
 
     if (v.length !== 11) {
@@ -43,13 +43,22 @@
         host: 'https://www.youtube-nocookie.com',
         playerVars: {
           autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 0,
-          fs: 0, disablekb: 1, iv_load_policy: 3, mute: mute, start: start, origin: location.origin
+          fs: 0, disablekb: 1, iv_load_policy: 3, mute: 1, start: start, origin: location.origin
         },
-        events: { onReady: function (e) { e.target.playVideo(); ready = true; } }
+        events: {
+          onReady: function (e) { e.target.playVideo(); ready = true; },
+          onStateChange: function (e) {
+            if (e.data === 1 && wantSound && !done) {
+              done = true;
+              player.unMute(); player.setVolume(100);
+              // desktop blocks programmatic unmute and pauses → resume muted so it keeps autoplaying
+              setTimeout(function () { if (player.getPlayerState() !== 1) { player.mute(); player.playVideo(); } }, 250);
+            }
+          }
+        }
       });
     }
 
-    // tap = play/pause only (no sound button). Also blocks YouTube's own chrome from being clicked.
     tap.addEventListener('click', function () {
       if (!ready) return;
       if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
