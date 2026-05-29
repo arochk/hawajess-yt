@@ -10,20 +10,19 @@
     #tap { position: absolute; inset: 0; z-index: 10; background: transparent; }
     #hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 76px; height: 76px; border-radius: 50%; background: rgba(0,0,0,.55);
-            color: #fff; font: 32px/76px -apple-system, sans-serif; text-align: center; }
-    #tap.playing #hint { display: none; }
+            color: #fff; font: 30px/76px -apple-system, sans-serif; text-align: center; display: none; }
+    #tap.show-hint #hint { display: block; }
     .msg { color: #fff; font-family: -apple-system, sans-serif; text-align: center; padding-top: 45%; }
   </style>
 </head>
 <body>
   <div id="player"></div>
-  <div id="tap"><div id="hint">&#9654;</div></div>
+  <div id="tap"><div id="hint">&#128266;</div></div>
   <script>
     function qp(n) { var m = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; }
     var v = qp('v').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 11);
     var start = parseInt(qp('start'), 10) || 0;
-    var mute = qp('mute') === '1' ? 1 : 0;
-    var player, ready = false;
+    var player, ready = false, needUnmute = false;
     var tap = document.getElementById('tap');
 
     if (v.length !== 11) {
@@ -40,17 +39,38 @@
         host: 'https://www.youtube-nocookie.com',
         playerVars: {
           autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 0,
-          fs: 0, disablekb: 1, iv_load_policy: 3, mute: mute, start: start, origin: location.origin
+          fs: 0, disablekb: 1, iv_load_policy: 3, mute: 0, start: start, origin: location.origin
         },
         events: {
-          onReady: function (e) { ready = true; e.target.playVideo(); },
-          onStateChange: function (e) { if (e.data === 1) tap.classList.add('playing'); else tap.classList.remove('playing'); }
+          onReady: function (e) {
+            ready = true;
+            e.target.playVideo();
+            setTimeout(function () {
+              var st = player.getPlayerState();
+              if (st !== 1 && st !== 3) {
+                needUnmute = true;
+                player.mute();
+                player.playVideo();
+                tap.classList.add('show-hint');
+              }
+            }, 1200);
+          },
+          onStateChange: function (e) {
+            if (e.data === 1 && !needUnmute) tap.classList.remove('show-hint');
+          }
         }
       });
     }
 
     tap.addEventListener('click', function () {
       if (!ready) return;
+      if (needUnmute) {
+        player.unMute(); player.setVolume(100);
+        needUnmute = false;
+        tap.classList.remove('show-hint');
+        if (player.getPlayerState() !== 1) player.playVideo();
+        return;
+      }
       if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
     });
   </script>
