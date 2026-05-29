@@ -6,7 +6,6 @@
   <title>Hawajess Player</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
-    /* اضبط القص هنا: كم بكسل نقص من الأعلى/الأسفل لإخفاء اسم القناة و"Watch on YouTube" */
     :root { --crop-top: 64px; --crop-bottom: 52px; }
     #wrap { position: absolute; inset: 0; overflow: hidden; }
     #player {
@@ -16,9 +15,9 @@
       border: 0;
     }
     #tap { position: absolute; inset: 0; z-index: 10; background: transparent; }
-    #hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 76px; height: 76px; border-radius: 50%; background: rgba(0,0,0,.55);
-            color: #fff; font: 30px/76px -apple-system, sans-serif; text-align: center; display: none; }
+    #hint { position: absolute; top: 50%; left: 16px; transform: translateY(-50%);
+            width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,.55);
+            color: #fff; font: 26px/60px -apple-system, sans-serif; text-align: center; display: none; }
     #tap.show-hint #hint { display: block; }
     .msg { color: #fff; font-family: -apple-system, sans-serif; text-align: center; padding-top: 45%; }
   </style>
