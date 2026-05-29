@@ -1,27 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Hawajess — YouTube proxy page for the in-app player.
-
-  WHY THIS EXISTS:
-  iOS WKWebView's LoadHTML(html, baseUrl) only *synthesizes* an origin; WKWebView can drop the HTTP Referer
-  on the cross-origin iframe request (WebKit bug 169846), so YouTube may still reject the embed with
-  "Error 153 — Video player configuration error". Loading a REAL https page (this file, served by GitHub
-  Pages) performs an actual navigation, so a valid Referer/Origin is always sent → no 153.
-
-  HOW THE APP USES IT:
-  YouTubeWebViewPlayer calls  LoadURL("https://<you>.github.io/<repo>/?v=VIDEO_ID&start=SECONDS")
-  and this page builds the official YouTube IFrame embed from the ?v= parameter.
-
-  DEPLOY (GitHub Pages):
-   1. Create a NEW public GitHub repo (e.g. "hawajess-yt") — keep your game repo private; only THIS page is public.
-   2. Upload this file as  index.html  to that repo (root).
-   3. Repo ▸ Settings ▸ Pages ▸ Source: "Deploy from a branch" ▸ Branch: main / (root) ▸ Save.
-   4. After ~1 min your URL is:  https://<your-username>.github.io/hawajess-yt/
-   5. Put that URL in YouTubeWebViewPlayer.ProxyUrl (in the C# file).
-
-  TEST IT FIRST (in iPhone Safari):  open  https://<you>.github.io/hawajess-yt/?v=b8Osh5Y03N4
-  If it plays → the app will play it too.
--->
 <html lang="ar">
 <head>
   <meta charset="utf-8">
@@ -41,21 +18,18 @@
         var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
         return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
       }
-      // sanitise: a YouTube id is 11 chars of [A-Za-z0-9_-]
       var v = qp('v').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 11);
       var start = parseInt(qp('start'), 10) || 0;
       var mute = qp('mute') === '1' ? 1 : 0;
-
       if (v.length !== 11) {
         document.getElementById('root').innerHTML = '<p class="msg">رابط فيديو غير صالح</p>';
         return;
       }
-
       var src = 'https://www.youtube-nocookie.com/embed/' + v
-              + '?autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1&mute=' + mute
+              + '?autoplay=1&playsinline=1&rel=0&modestbranding=1&controls=0&fs=0&disablekb=1&iv_load_policy=3'
+              + '&enablejsapi=1&mute=' + mute
               + '&origin=' + encodeURIComponent(location.origin)
               + (start > 0 ? '&start=' + start : '');
-
       var f = document.createElement('iframe');
       f.src = src;
       f.allow = 'autoplay; encrypted-media; fullscreen';
